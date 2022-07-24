@@ -1,59 +1,69 @@
-import React from 'react';
-import { SafeAreaView, StyleSheet, Text} from 'react-native';
-import CourseList from './components/CourseList';
+import 'react-native-gesture-handler';
+import React, { useState, useEffect } from 'react';
+import ScheduleScreen from './screens/ScheduleScreen';
+import CourseDetailScreen from './screens/CourseDetailScreen';
+import CourseEditScreen from './screens/CourseEditScreen';
+import RegisterScreen from './screens/RegisterScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import UserContext from './UserContext';
+import SignInButton from './components/SignInButton';
+import { firebase } from './firebase';
+import 'firebase/compat/auth';
 
-const schedule = {
-  "title": "CS Courses for 2018-2019",
-  "courses": [
-    {
-      "id": "F101",
-      "title": "Computer Science: Concepts, Philosophy, and Connections",
-      "meets": "MWF 11:00-11:50"
-    },
-    {
-      "id": "F110",
-      "title": "Intro Programming for non-majors",
-      "meets": "MWF 10:00-10:50"
-    },
-    {
-      "id": "F111",
-      "title": "Fundamentals of Computer Programming I",
-      "meets": "MWF 13:00-13:50"
-    },
-    {
-      "id": "F211",
-      "title": "Fundamentals of Computer Programming II",
-      "meets": "TuTh 12:30-13:50"
-    }
-  ]
-};
-
-
-
-const Banner = ({title}) => (
-  <Text style={styles.bannerStyle}>{title}</Text>
-);
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 20,
-  },
-});
-
-
+const Stack = createStackNavigator();
 
 const App = () => {
+  const [auth, setAuth] = useState();
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    firebase.auth().onAuthStateChanged((auth) => {
+      setAuth(auth);
+    });
+  }, []);
+    
+
+  useEffect(() => {
+    if (auth && auth.uid) {
+      const db = firebase.database().ref('users').child(auth.uid);
+      const handleData = snap => {
+        setUser({uid: auth.uid, ...snap.val()});
+      }
+      db.on('value', handleData, error => alert(error));
+      return () => { db.off('value', handleData); };
+    } else {
+      setUser(null);
+    }
+  }, [auth]);
+
+ 
   return (
-    <SafeAreaView style={styles.container}>
-      <Banner title={schedule.title} />
-      <CourseList courses={schedule.courses} />
-    </SafeAreaView>
+    <UserContext.Provider value={user}>
+      <NavigationContainer>
+        <Stack.Navigator> 
+          <Stack.Screen name="ScheduleScreen"
+            component={ScheduleScreen}
+            options={({navigation}) => ({ 
+              title: "Schedule",
+              headerRight: () => (
+                <SignInButton navigation={navigation} user={user} />
+              ),
+            })
+          }
+          />
+          <Stack.Screen name="CourseDetailScreen"
+            component={CourseDetailScreen}
+            options={{ title: 'Course detail'}} 
+          />
+          <Stack.Screen name="CourseEditScreen"
+            component={CourseEditScreen}
+            options={{ title: 'Course Editor'}} 
+          />
+          <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </UserContext.Provider>
   );
-}
-
-
+};
 
 export default App;

@@ -5,16 +5,17 @@ const getCourseNumber = course => (
   course.id.slice(1)
 )
 
-const Course = ({course}) => (
-  <TouchableOpacity style={styles.courseButton}>
-    <Text style={styles.courseText}>
-      {`CS ${getCourseNumber(course)}\n${course.meets}`}
-    </Text>
-  </TouchableOpacity>
-);
+const Course = ({course, isDisabled, isSelected, select, view}) => (
+    <TouchableOpacity style={styles[isSelected ? 'courseButtonSelected' : isDisabled ? 'courseButtonDisabled' : 'courseButton']}
+        onPress={() => { if (!isDisabled) select(course); }}
+        onLongPress={() => view(course)}>
+      <Text style={styles.courseText}>
+        {`CS ${getCourseNumber(course)}\n${course.meets}`}
+      </Text>
+    </TouchableOpacity>
+  );
 
-const styles = StyleSheet.create({
-  courseButton: {
+  const courseButtonBase = {
     flex: 1,
     borderRadius: 5,
     justifyContent: 'center',
@@ -24,7 +25,20 @@ const styles = StyleSheet.create({
     padding: 10,
     minWidth: 90,
     maxWidth: 90,
+  };
+
+const styles = StyleSheet.create({
+  courseButton: {
+    ...courseButtonBase,
     backgroundColor: '#66b0ff',
+  },
+  courseButtonSelected: {
+    ...courseButtonBase,
+    backgroundColor: '#004a99',
+  },
+  courseButtonDisabled: {
+    ...courseButtonBase,
+    backgroundColor: '#d3d3d3',
   },
   courseText:{
     color: '#fff',
@@ -34,3 +48,7 @@ const styles = StyleSheet.create({
 });
 
 export default Course;
+Footer
+© 2022 GitHub, Inc.
+Footer navigation
+Terms
